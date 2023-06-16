@@ -18,22 +18,30 @@ from datetime import datetime, timedelta
 shared_key_data = "kjfdlskfhiuewhfk947368"
 server_key_file = "/etc/ssh/ssh_host_rsa_key.pub"
 
+
 def get_timestamp() -> int:
     return int(time.time())
 
 # Perl's md5_base64 implementation
+
+
 def md5_base64_perl(x: str) -> str:
     return base64.b64encode(hashlib.md5(x.encode()).digest()).strip(b'=').decode()
 
 # Rust's `base64::encode(tools::md5sum("something")?);`
+
+
 def md5_base64_rs(x: str) -> str:
     return base64.b64encode(hashlib.md5(x.encode()).digest()).decode()
+
 
 def generate_server_id(key: str) -> str:
     return hashlib.md5(key.encode()).hexdigest().upper()
 
+
 def dt_string(format: str, offset_secs: int = 0) -> str:
     return (datetime.now() + timedelta(seconds=offset_secs)).strftime(format)
+
 
 def generate_subscription_pve_pmg(key: str, server_ids: List[str]) -> str:
     localinfo = {
@@ -41,7 +49,7 @@ def generate_subscription_pve_pmg(key: str, server_ids: List[str]) -> str:
         "status": "Active",
         "key": key,
         "validdirectory": ",".join(server_ids),
-        "productname": "YajuuSenpai",
+        "productname": "Unblocker",
         "regdate": dt_string("%Y-%m-%d %H:%M:%S"),
         "nextduedate": dt_string("%Y-%m-%d", 1296000),
     }
@@ -55,6 +63,8 @@ def generate_subscription_pve_pmg(key: str, server_ids: List[str]) -> str:
 # key_pattern can be find in /usr/share/perl5/{PVE,PMG}/API2/Subscription.pm
 # PVE: r'pve([1248])([cbsp])-[0-9a-f]{10}'
 # PMG: r'pmg([cbsp])-[0-9a-f]{10}'
+
+
 def activate_pve_pmg(key: str, subscription_file: str) -> None:
     # check if the key format is correct
     # pattern = re.compile(key_pattern)
@@ -74,17 +84,19 @@ def activate_pve_pmg(key: str, subscription_file: str) -> None:
     with open(subscription_file, "w") as f:
         f.write(subscription)
 
+
 def generate_subscription_pbs(key: str, server_ids: List[str]) -> str:
     localinfo = {
-        "status": "active", # PBS: `new`, `notfound`, `active`, `invalid`
+        "status": "active",  # PBS: `new`, `notfound`, `active`, `invalid`
         "serverid": ",".join(server_ids),
         "checktime": get_timestamp(),
         "key": key,
-        "message": "Yajuu Senpai has got your back",
-        "productname": "YajuuSenpai",
+        "message": "The unblocker script has got your back",
+        "productname": "Unblocker",
         "regdate": dt_string("%Y-%m-%d %H:%M:%S"),
-        "nextduedate": dt_string("%Y-%m-%d", 1296000), # 1296000: MAX_LOCAL_KEY_AGE in src/tools/subscription.rs
-        "url": "https://github.com/Jamesits/pve-fake-subscription",
+        # 1296000: MAX_LOCAL_KEY_AGE in src/tools/subscription.rs
+        "nextduedate": dt_string("%Y-%m-%d", 1296000),
+        "url": "https://github.com/red0fireus/pve-fake-subscription",
     }
 
     data = base64.standard_b64encode(json.dumps(localinfo).encode()).decode()
@@ -94,6 +106,8 @@ def generate_subscription_pbs(key: str, server_ids: List[str]) -> str:
     return key + "\n" + csum + "\n" + data + "\n"
 
 # Key pattern: pbst-xxxxxxxxxx
+
+
 def activate_pbs(key: str, subscription_file: str) -> None:
     # get machine ID
     server_id = ""
@@ -106,6 +120,7 @@ def activate_pbs(key: str, subscription_file: str) -> None:
     # write license file
     with open(subscription_file, "w") as f:
         f.write(subscription)
+
 
 if __name__ == "__main__":
     # Proxmox VE
